@@ -44,8 +44,9 @@ void setup() {
   Particle.variable("buildDate", BUILD_DATE);
   Particle.variable("myfirmware", MYFIRMWARE);
 
-  Particle.function("setConfig", setConfig1);
-   Particle.function("setConfig2", setConfig2);
+  Particle.function("setConfig1", setConfig1);
+  Particle.function("setConfig2", setConfig2);
+  Particle.function("ledConfig", ledConfig);
   Particle.subscribe("drago", myHandler, MY_DEVICES);
 
   pinMode(led2, OUTPUT);  // Built in led
@@ -59,13 +60,15 @@ void setup() {
   strip1.show(); // Initialize all pixels to 'off'
   strip2.begin();
   strip2.show(); // Initialize all pixels to 'off'
+  strip3.begin();
+  strip3.show(); // Initialize all pixels to 'off'
 
 }
 
 void loop() {
   // set the stip om
-  juiceLeds1(red,green,blue,white);
-  juiceLeds2(red2,green2,blue2,white2);
+  // juiceLeds1(red,green,blue,white);
+  // juiceLeds2(red2,green2,blue2,white2);
 
   // check for the color to be changed
   if (oldblue != blue) {
@@ -114,8 +117,63 @@ void loop() {
       return 0;
   }
 
+  int ledConfig(String command) {
+    int delim1 = command.indexOf(":");
+    int delim2 = command.lastIndexOf(":");
+    //Particle.publish("delim1", String(delim1));
+    //Particle.publish("delim2", String(delim2));
+    String mystrip = command.substring(0,delim1);
+    String mycolor = command.substring(delim1+1,delim2);
+    String mybrightness = command.substring(delim2+1);
+    int stripId = mystrip.toInt();
+    Particle.publish("mystrip", String(mystrip));
+    Particle.publish("mycolor", String(mycolor));
+    Particle.publish("mybrightness", String(mybrightness));
+
+      if ( mycolor == "red") { red = mybrightness.toInt(); juiceLeds(stripId,red,green,blue,white); return 5; }
+      if ( mycolor == "green") { green = mybrightness.toInt(); juiceLeds(stripId,red,green,blue,white); return 7; }
+      if ( mycolor == "blue") { blue = mybrightness.toInt(); juiceLeds(stripId,red,green,blue,white); return 8; }
+      if ( mycolor == "white") { white = mybrightness.toInt(); juiceLeds(stripId,red,green,blue,white); return 9; }
+      if ( mycolor == "all") { white = red = green = blue = mybrightness.toInt(); juiceLeds(stripId,red,green,blue,white); return 9; }
+      if ( mycolor == "reset" ) {System.reset(); return 99;}
+    else
+      return 0;
+
+  }
+
+  void juiceLeds(int stripId, int ured, int ugreen,int ublue, int uwhite) {
+
+    if ( stripId == 1 ){
+      Particle.publish("juiceleds", String(stripId));
+      int pix = 18;
+      for (int n=0; n < pix; n++ ) {
+        strip1.setPixelColor(n,ugreen,ured,ublue,uwhite ); 
+        delay(10);
+        strip1.show();
+      }
+      
+    }
+    if ( stripId == 2 ){
+      int pix = 81;
+      for (int n=0; n < pix; n++ ) {
+        strip2.setPixelColor(n,ugreen,ured,ublue,uwhite ); 
+        delay(10);
+        strip2.show();
+      }
+      
+    }
+    if ( stripId == 3 ){
+      int pix = 87;
+      for (int n=0; n < pix; n++ ) {
+        strip3.setPixelColor(n,ugreen,ured,ublue,uwhite ); 
+        delay(10);
+        strip3.show();
+      }
+      
+    }
 
 
+  }
 
   void juiceLeds1(int ured, int ugreen,int ublue, int uwhite) {
         
