@@ -68,3 +68,9 @@ stp 1&2 (99)|  all 255   | 3.58
 stp 1&2 (99)|  white 50  | 0.36 | w50 = .004  | .0031  | .000031
 stp 1&2 (99)|  white 100 | 0.68 | w100 = .006 | .0063  | .000032
 stp 1&2 (99)|  white 255 | 1.63 | w255 = .016 | .0159  | .00062
+
+## Cat 5 power cable
++ 4x w/orange, orange, white green, wh/blu
+signal blue
+- green, white brown brown
+ not used white blue 
