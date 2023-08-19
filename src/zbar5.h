@@ -1,5 +1,5 @@
 #define FILENAME "zbar5.cpp"
-#define MYVERSION "2.1"
+#define MYVERSION "2.2"
 #define BUILD_DATE "8/15/23"
 #define CONFIGADDR 10
 #define MYFIRMWARE "argon_4.10"

@@ -141,6 +141,17 @@ void loop() {
 
   }
 
+
+
+
+
+
+
+
+
+
+
+
   void juiceLeds(int stripId, int ured, int ugreen,int ublue, int uwhite) {
 
     if ( stripId == 1 ){
@@ -153,7 +164,7 @@ void loop() {
       }
       
     }
-    if ( stripId == 2 ){
+    else if ( stripId == 2 ){
       int pix = 81;
       for (int n=0; n < pix; n++ ) {
         strip2.setPixelColor(n,ugreen,ured,ublue,uwhite ); 
@@ -162,14 +173,35 @@ void loop() {
       }
       
     }
-    if ( stripId == 3 ){
-      int pix = 87;
+    else if ( stripId == 3 ){
+      int pix = 84;
       for (int n=0; n < pix; n++ ) {
         strip3.setPixelColor(n,ugreen,ured,ublue,uwhite ); 
         delay(10);
         strip3.show();
       }
       
+    }
+    else if ( stripId == 4 ){
+      int pix = 84;
+      for (int n=0; n < pix; n++ ) {
+        strip3.setPixelColor(n,ugreen,ured,ublue,uwhite ); 
+      }
+      strip3.show();
+      
+    }
+    else if ( stripId == 5 ){
+
+        strip1.clear();
+        strip1.show();
+        strip2.clear(); 
+        strip2.show(); 
+        strip3.clear();  
+        strip3.show(); 
+
+    }
+    else {
+      Particle.publish("ERROR", "Did not find stripid");
     }
 
 
