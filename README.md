@@ -44,6 +44,7 @@ VUSB|   J7  | VIN      | (+) rail (7 right)
 GND |   E4  | gnd      | (-) rail (1 right)  
 D2  |   J14 | D2       | header
 D3  |   J13 | D3       | header  
+D4  |   J12 | D4       | header
 
 # Power Consuption
 
