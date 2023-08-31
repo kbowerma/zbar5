@@ -48,6 +48,7 @@ void setup() {
   Particle.function("setConfig2", setConfig2);
   Particle.function("ledConfig", ledConfig);
   Particle.subscribe("drago", myHandler, MY_DEVICES);
+  Particle.subscribe("office", ledhandler, MY_DEVICES);
 
   pinMode(led2, OUTPUT);  // Built in led
   pinMode(led1, OUTPUT);
@@ -62,6 +63,11 @@ void setup() {
   strip2.show(); // Initialize all pixels to 'off'
   strip3.begin();
   strip3.show(); // Initialize all pixels to 'off'
+  // Publish my vars
+  Particle.publish("FILENAME", FILENAME);
+  Particle.publish("MYVERSION", MYVERSION);
+  Particle.publish("BUILD_DATE", BUILD_DATE);
+  Particle.publish("MYFIRMWARE", MYFIRMWARE);
 
 }
 
@@ -140,17 +146,6 @@ void loop() {
       return 0;
 
   }
-
-
-
-
-
-
-
-
-
-
-
 
   void juiceLeds(int stripId, int ured, int ugreen,int ublue, int uwhite) {
 
@@ -248,4 +243,11 @@ void loop() {
     if (strcmp(data,"00")==0) {
       juiceLeds1(0,0,0,0);
     }
+  }
+  void ledhandler(const char *event, const char *data) {
+    // Does not respond if all at 255
+    String stdata = String(data);
+    Particle.publish("debug stdata",stdata);
+    ledConfig(String(stdata));
+
   }
