@@ -1,9 +1,10 @@
 /*
- * Project zbar4
+ * Project zbar5
  * Description:
  * Author: Kyle Bowerman
- * Date: 8/8/23
- * 2 led light strips on turtle-bobcat refactored
+ * Date: 8/30/23
+ * 3 led light strips on swed1 and swed2 
+ * working with PIR
  */
 
 #include "zbar5.h"
@@ -13,11 +14,13 @@
 int led2 = D7; 
 int led1 = D0; // Instead of writing D0 over and over again, we'll write led1
 int red, green, blue, white, red2,green2,blue2,white2 = 0;  // variable to store color
-int oldred, oldgreen, oldblue, oldwhite = 0;  // variable to store color
 int strip1pin = D2;
 int strip2pin = D3;
 int strip3pin = D4;
+int PIR = A0;
 int numpixel = 18;
+int motionState;
+int lastMotionTime, secSinceMotion = 0;
 
 // Objects 
 SYSTEM_MODE(AUTOMATIC);
@@ -28,8 +31,10 @@ MyConfig myConfig = { false, false, "Test!", 20};
 
 
 void setup() {
+  size_t eepromlength = int(EEPROM.length());
   EEPROM.get(CONFIGADDR,myConfig);
 
+  Particle.variable("eepromlength", int(eepromlength));
   Particle.variable("D2Armed", myConfig.D2Armed);
   Particle.variable("red", red);
   Particle.variable("green", green);
@@ -43,11 +48,8 @@ void setup() {
   Particle.variable("fileName", FILENAME);
   Particle.variable("buildDate", BUILD_DATE);
   Particle.variable("myfirmware", MYFIRMWARE);
-
-  Particle.function("setConfig1", setConfig1);
-  Particle.function("setConfig2", setConfig2);
+  Particle.variable("lastMotion", secSinceMotion);
   Particle.function("ledConfig", ledConfig);
-  Particle.subscribe("drago", myHandler, MY_DEVICES);
   Particle.subscribe("office", ledhandler, MY_DEVICES);
 
   pinMode(led2, OUTPUT);  // Built in led
@@ -55,6 +57,7 @@ void setup() {
   pinMode(strip1pin, OUTPUT);  // 18x neopixel
   pinMode(strip2pin, OUTPUT);  // 81x neopixel
   pinMode(strip3pin, OUTPUT);  // 81x neopixel
+  pinMode(PIR, INPUT_PULLDOWN);
 
 
   strip1.begin();
@@ -72,62 +75,25 @@ void setup() {
 }
 
 void loop() {
-  // set the stip om
-  // juiceLeds1(red,green,blue,white);
-  // juiceLeds2(red2,green2,blue2,white2);
 
-  // check for the color to be changed
-  if (oldblue != blue) {
-    Particle.publish("bluecolorchanged", "foo");
-  }
+// read PIR Sensor
+motionState = digitalRead(PIR);
 
-  // set last color change so we know when an event cahnges
-  oldred = red;
-  oldgreen = green;
-  oldblue = blue;
-  oldwhite = white;
-
-
-
+// Got motion
+if ( motionState == HIGH ) { // got motion
+  motionHandler(); 
 }
 
-  int setConfig1(String command) {
-    int seperator = command.indexOf("=");
-    String key = command.substring(0,seperator);
-    String value = command.substring(seperator+1);
+ // last item in loop
+ secSinceMotion = ( millis() - lastMotionTime )/1000;
+}
 
-    if ( key == "red") { red = value.toInt(); juiceLeds1(red,green,blue,white); return 5; }
-      if ( key == "green") { green = value.toInt(); juiceLeds1(red,green,blue,white); return 7; }
-      if ( key == "blue") { blue = value.toInt(); juiceLeds1(red,green,blue,white); return 8; }
-      if ( key == "white") { white = value.toInt(); juiceLeds1(red,green,blue,white); return 9; }
-      if ( key == "all") { white = red = green = blue = value.toInt(); juiceLeds1(red,green,blue,white); return 9; }
-      if ( key == "reset" ) {System.reset(); return 99;}
-
-    
-    else
-      return 0;
-
-  }
-  int setConfig2(String command) {
-    int seperator = command.indexOf("=");
-    String key = command.substring(0,seperator);
-    String value = command.substring(seperator+1);
-
-      if ( key == "red") { red2 = value.toInt(); juiceLeds2(red2,green2,blue2,white2); return 5; }
-      if ( key == "green") { green2 = value.toInt(); juiceLeds2(red2,green2,blue2,white2); return 7; }
-      if ( key == "blue") { blue2 = value.toInt(); juiceLeds2(red2,green2,blue2,white2); return 8; }
-      if ( key == "white") { white2 = value.toInt(); juiceLeds2(red2,green2,blue2,white2); return 9; }
-      if ( key == "all") { white2 = red2 = green2 = blue2 = value.toInt(); juiceLeds2(red2,green2,blue2,white2); return 9; }
-      if ( key == "reset" ) {System.reset(); return 99;}
-    else
-      return 0;
-  }
+// ---------- Functions ---------
 
   int ledConfig(String command) {
+    // usage:  strip:color:brightness   2:white:200
     int delim1 = command.indexOf(":");
     int delim2 = command.lastIndexOf(":");
-    //Particle.publish("delim1", String(delim1));
-    //Particle.publish("delim2", String(delim2));
     String mystrip = command.substring(0,delim1);
     String mycolor = command.substring(delim1+1,delim2);
     String mybrightness = command.substring(delim2+1);
@@ -202,52 +168,18 @@ void loop() {
 
   }
 
-  void juiceLeds1(int ured, int ugreen,int ublue, int uwhite) {
-        
-        #define mydelay2 10
-        for (int n=0; n < numpixel; n++ ) {
-        strip1.setPixelColor(n,ugreen,ured,ublue,uwhite );  // not sure why red and green is swapped
-       //Particle.publish("juiceLeds", "foo");
-        delay(mydelay2);
-        strip1.show();
-        }
-
-  }
-
-  void juiceLeds2(int ured, int ugreen,int ublue, int uwhite) {
-        
-        #define mydelay2 10
-        for (int n=0; n < 81; n++ ) {
-        strip2.setPixelColor(n,ugreen,ured,ublue,uwhite );  // not sure why red and green is swapped
-       //Particle.publish("juiceLeds", "foo");
-        delay(mydelay2);
-        strip2.show();
-        }
-
-  }  
-
-  void juiceSection(int startled, int endled, int ured, int ugreen,int ublue, int uwhite) {
-      
-      #define mydelay2 10
-      for (int n=startled; n < endled; n++) {
-      strip1.setPixelColor(n,ugreen,ured,ublue,uwhite );  // not sure why red and green is swapped
-      //strip2.setPixelColor(n,ugreen,ured,ublue,uwhite );
-      delay(mydelay2);
-      strip1.show();
-
-      }
-
-  }
-
-  void myHandler(const char *event, const char *data) {
-    if (strcmp(data,"00")==0) {
-      juiceLeds1(0,0,0,0);
-    }
-  }
   void ledhandler(const char *event, const char *data) {
-    // Does not respond if all at 255
     String stdata = String(data);
     Particle.publish("debug stdata",stdata);
     ledConfig(String(stdata));
+
+  }
+
+  void motionHandler() {
+    digitalWrite(led2, HIGH);
+    delay(500);
+    digitalWrite(led2, HIGH);
+    lastMotionTime = millis();
+    return;
 
   }
